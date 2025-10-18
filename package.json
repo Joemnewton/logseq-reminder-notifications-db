@@ -1,0 +1,13 @@
+{
+  "name": "logseq-reminder-notifications-db",
+  "version": "1.3.0",
+  "description": "Desktop and in-app notifications for scheduled blocks in Logseq (Database version)",
+  "main": "index.js",
+  "author": "Joemnewton",
+  "license": "MIT",
+  "logseq": {
+    "id": "logseq-reminder-notifications-db",
+    "title": "Reminder Notifications (DB)",
+    "icon": "./icon.svg"
+  }
+}

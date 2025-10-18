@@ -1,0 +1,22 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="64" fill="#4F46E5"/>
+  
+  <!-- Bell icon -->
+  <path d="M64 24C52.4 24 43 33.4 43 45V58.5C43 62.1 41.6 65.5 39.2 68L35.8 71.6C32.7 74.9 35 80 39.5 80H88.5C93 80 95.3 74.9 92.2 71.6L88.8 68C86.4 65.5 85 62.1 85 58.5V45C85 33.4 75.6 24 64 24Z" fill="white"/>
+  
+  <!-- Bell clapper -->
+  <circle cx="64" cy="72" r="3" fill="#4F46E5"/>
+  
+  <!-- Notification dot -->
+  <circle cx="80" cy="36" r="8" fill="#EF4444"/>
+  <circle cx="80" cy="36" r="6" fill="#FEE2E2"/>
+  
+  <!-- Sound waves -->
+  <path d="M95 45C98.3 48.3 100 52.6 100 57.5S98.3 66.7 95 70" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M33 45C29.7 48.3 28 52.6 28 57.5S29.7 66.7 33 70" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+  
+  <!-- Clock element -->
+  <circle cx="64" cy="95" r="12" fill="white"/>
+  <path d="M64 89V95L68 99" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
