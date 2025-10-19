@@ -322,13 +322,6 @@ function main() {
   console.log('🔧 Debug: Settings available:', Object.keys(logseq.settings || {}));
   console.log('🔧 Debug: Using session-only notification tracking');
 
-  // Show compatibility warning to user
-  logseq.App.showMsg(
-    '⚠️ Reminder Notifications: Desktop DB version only. Not compatible with mobile or file-based graphs.',
-    'warning',
-    { timeout: 8000 }
-  );
-
   // Define settings schema
   logseq.useSettingsSchema([
     {
