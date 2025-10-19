@@ -6,7 +6,25 @@
 
 Desktop and in-app notifications for scheduled blocks in Logseq. Never miss your scheduled tasks and reminders again!
 
-> **Important:** This plugin is designed for **Logseq Database (DB) graphs**. If you're using traditional Logseq Markdown/File-based graphs, please use the Markdown version of this plugin instead.
+---
+
+## ⚠️ COMPATIBILITY WARNING - READ BEFORE INSTALLING
+
+**This plugin ONLY works with:**
+- ✅ **Logseq DESKTOP application** (Windows, macOS, Linux)
+- ✅ **Database (DB) version graphs** (SQLite-based storage)
+
+**This plugin DOES NOT work with:**
+- ❌ **Mobile apps** (iOS/Android) - Desktop notifications not supported on mobile
+- ❌ **File-based/Markdown graphs** - Use the [Markdown version](https://github.com/Joemnewton/logseq-reminder-notifications) instead
+- ❌ **Web version** - Browser notification API limitations
+
+> **How to check if you have a DB graph:**
+> - DB graphs are stored in `~/logseq/graphs/GRAPH-NAME/db.sqlite`
+> - File-based graphs are stored as `.md` files in your chosen folder
+> - In Logseq, check Settings → About → Graph format
+
+---
 
 ## Demo
 
@@ -44,10 +62,12 @@ Desktop and in-app notifications for scheduled blocks in Logseq. Never miss your
 
 ## Installation
 
-### Prerequisites
+### Prerequisites - PLEASE READ
 
-- **Logseq Database (DB) graph** - This plugin works with Logseq's new Database version only
-- If you're using traditional Markdown/File-based graphs, this plugin will NOT work correctly. Use the Markdown version instead.
+- ✅ **Logseq DESKTOP application** (Windows/macOS/Linux)
+- ✅ **Database (DB) graph** - This plugin works with Logseq's Database version only
+- ❌ **NOT compatible with mobile apps** (iOS/Android)
+- ❌ **NOT compatible with file-based/Markdown graphs** - Use the [Markdown version](https://github.com/Joemnewton/logseq-reminder-notifications) instead
 
 ### Steps
 

@@ -317,8 +317,17 @@ let alreadyNotified = {}; // Session-local tracking to prevent duplicates
  */
 function main() {
   console.log('🔔 Reminder Notifications plugin v1.3.0 (DB Version) starting...');
+  console.log('⚠️  COMPATIBILITY: This plugin ONLY works with Logseq DESKTOP DB version');
+  console.log('⚠️  NOT compatible with: Mobile apps, Web version, or File-based graphs');
   console.log('🔧 Debug: Settings available:', Object.keys(logseq.settings || {}));
   console.log('🔧 Debug: Using session-only notification tracking');
+
+  // Show compatibility warning to user
+  logseq.App.showMsg(
+    '⚠️ Reminder Notifications: Desktop DB version only. Not compatible with mobile or file-based graphs.',
+    'warning',
+    { timeout: 8000 }
+  );
 
   // Define settings schema
   logseq.useSettingsSchema([
