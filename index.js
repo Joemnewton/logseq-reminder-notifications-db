@@ -10,6 +10,14 @@
  * - Property queries use :logseq.property/scheduled for scheduled:: property
  * - SCHEDULED: <date> format in content still works and uses :block/title
  * - Scheduled property values may be returned as date numbers (milliseconds since epoch)
+ *
+ * v1.4.0 Changes:
+ * - Increased default in-app notification duration from 8s to 30s
+ * - Increased default desktop notification duration from 10s to 30s
+ * - Increased default overdue notification duration from 30s to 60s
+ * - Added configurable notification duration settings
+ * - Added enhanced debugging for macOS notification issues
+ * - Added event listeners to track notification lifecycle
  */
 
 /**
@@ -19,9 +27,12 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const PERIODIC_RESCAN_INTERVAL_MS = 2 * 60 * 1000;
-const OVERDUE_NOTIFICATION_TIMEOUT_MS = 30000;
-const NORMAL_NOTIFICATION_TIMEOUT_MS = 10000;
 const CLEANUP_INTERVAL_MS = ONE_HOUR_MS; // Run cleanup every hour
+
+// Default notification durations (can be overridden by settings)
+const DEFAULT_INAPP_NOTIFICATION_TIMEOUT_MS = 30000; // 30 seconds
+const DEFAULT_OVERDUE_NOTIFICATION_TIMEOUT_MS = 60000; // 60 seconds
+const DEFAULT_NORMAL_NOTIFICATION_TIMEOUT_MS = 30000; // 30 seconds
 
 /**
  * Time parsing utilities - inline for Logseq compatibility
@@ -316,11 +327,12 @@ let alreadyNotified = {}; // Session-local tracking to prevent duplicates
  * Main plugin initialization
  */
 function main() {
-  console.log('🔔 Reminder Notifications plugin v1.3.0 (DB Version) starting...');
+  console.log('🔔 Reminder Notifications plugin v1.4.0 (DB Version) starting...');
   console.log('⚠️  COMPATIBILITY: This plugin ONLY works with Logseq DESKTOP DB version');
   console.log('⚠️  NOT compatible with: Mobile apps, Web version, or File-based graphs');
   console.log('🔧 Debug: Settings available:', Object.keys(logseq.settings || {}));
   console.log('🔧 Debug: Using session-only notification tracking');
+  console.log('✨ v1.4.0: Increased notification durations and added configurable settings');
 
   // Define settings schema
   logseq.useSettingsSchema([
@@ -387,6 +399,33 @@ function main() {
       default: 7,
       min: 0,
       max: 23
+    },
+    {
+      key: "inAppNotificationDuration",
+      type: "number",
+      title: "In-App Notification Duration (seconds)",
+      description: "How long in-app notifications stay visible (5-120 seconds)",
+      default: 30,
+      min: 5,
+      max: 120
+    },
+    {
+      key: "desktopNotificationDuration",
+      type: "number",
+      title: "Desktop Notification Duration (seconds)",
+      description: "How long desktop notifications stay visible for normal reminders (5-300 seconds)",
+      default: 30,
+      min: 5,
+      max: 300
+    },
+    {
+      key: "overdueNotificationDuration",
+      type: "number",
+      title: "Overdue Notification Duration (seconds)",
+      description: "How long desktop notifications stay visible for overdue reminders (10-300 seconds)",
+      default: 60,
+      min: 10,
+      max: 300
     }
   ]);
 
@@ -753,12 +792,20 @@ async function sendNotification(reminder, intervalMinutes = 0, isOverdue = false
   try {
     console.log('📢 Sending notifications...');
 
+    // Get notification durations from settings
+    const settings = logseq.settings || {};
+    const inAppDuration = (settings.inAppNotificationDuration || 30) * 1000; // Convert to ms
+    const desktopDuration = (settings.desktopNotificationDuration || 30) * 1000;
+    const overdueDuration = (settings.overdueNotificationDuration || 60) * 1000;
+
+    console.log(`⏱️  Using notification durations - In-app: ${inAppDuration}ms, Desktop: ${desktopDuration}ms, Overdue: ${overdueDuration}ms`);
+
     // Logseq in-app notification
     console.log('📱 Sending Logseq in-app notification:', message);
     try {
       const notificationType = isOverdue ? 'warning' : 'info';
-      await logseq.App.showMsg(message, notificationType, { timeout: 8000 });
-      console.log('✅ Logseq notification sent successfully');
+      await logseq.App.showMsg(message, notificationType, { timeout: inAppDuration });
+      console.log(`✅ Logseq notification sent successfully with ${inAppDuration}ms duration`);
     } catch (error) {
       console.error('❌ Failed to send Logseq notification:', error);
       // Fallback: try simpler call
@@ -771,10 +818,14 @@ async function sendNotification(reminder, intervalMinutes = 0, isOverdue = false
     }
 
     // Desktop notification
-    console.log('🖥️ Checking desktop notification permission:', typeof Notification !== 'undefined' ? Notification.permission : 'API not available');
+    console.log('🖥️ Checking desktop notification permission...');
+    console.log('  - Notification API available:', typeof Notification !== 'undefined');
+    console.log('  - Permission status:', typeof Notification !== 'undefined' ? Notification.permission : 'N/A');
+    console.log('  - User agent:', navigator.userAgent);
 
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      console.log('🖥️ Creating desktop notification');
+      console.log('🖥️ Creating desktop notification with title:', title);
+      console.log('🖥️ Notification body preview:', message.substring(0, 100));
 
       const notificationOptions = {
         body: message,
@@ -784,24 +835,71 @@ async function sendNotification(reminder, intervalMinutes = 0, isOverdue = false
         silent: false // Always allow notification sound
       };
 
-      const notification = new Notification(title, notificationOptions);
+      try {
+        const notification = new Notification(title, notificationOptions);
 
-      console.log('✅ Desktop notification created');
+        console.log('✅ Desktop notification object created successfully');
+        console.log('  - Tag:', notification.tag);
+        console.log('  - RequireInteraction:', notification.requireInteraction);
 
-      // Auto-close notification (longer for overdue)
-      const timeout = isOverdue ? OVERDUE_NOTIFICATION_TIMEOUT_MS : NORMAL_NOTIFICATION_TIMEOUT_MS;
-      setTimeout(() => {
-        notification.close();
-      }, timeout);
+        // Auto-close notification (longer for overdue)
+        const timeout = isOverdue ? overdueDuration : desktopDuration;
+        console.log(`⏱️  Desktop notification will auto-close in ${timeout}ms`);
+
+        setTimeout(() => {
+          console.log('🔔 Auto-closing desktop notification');
+          notification.close();
+        }, timeout);
+
+        // Add event listeners for debugging
+        notification.onclick = () => {
+          console.log('🖱️  Desktop notification clicked');
+          notification.close();
+        };
+
+        notification.onshow = () => {
+          console.log('👁️  Desktop notification shown');
+        };
+
+        notification.onerror = (error) => {
+          console.error('❌ Desktop notification error:', error);
+        };
+
+        notification.onclose = () => {
+          console.log('👋 Desktop notification closed');
+        };
+
+      } catch (notifError) {
+        console.error('❌ Error creating Notification object:', notifError);
+        console.error('  - Error name:', notifError.name);
+        console.error('  - Error message:', notifError.message);
+      }
 
     } else if (typeof Notification !== 'undefined') {
-      console.warn('⚠️ Desktop notifications not permitted. Current permission:', Notification.permission);
+      console.warn('⚠️ Desktop notifications not permitted!');
+      console.warn('  - Current permission:', Notification.permission);
+      console.warn('  - To enable: Check System Settings > Notifications > Logseq');
+
+      if (Notification.permission === 'default') {
+        console.log('🔔 Attempting to request notification permission...');
+        try {
+          const permission = await Notification.requestPermission();
+          console.log('🔔 Permission request result:', permission);
+          if (permission === 'granted') {
+            console.log('✅ Permission granted! Notifications will work on next trigger.');
+          }
+        } catch (permError) {
+          console.error('❌ Error requesting permission:', permError);
+        }
+      }
     } else {
-      console.warn('⚠️ Notification API not available');
+      console.warn('⚠️ Notification API not available in this environment');
+      console.warn('  - This usually means Logseq is running in a restricted context');
     }
 
   } catch (error) {
     console.error('❌ Error sending notification:', error);
+    console.error('  - Error stack:', error.stack);
   }
 }
 
