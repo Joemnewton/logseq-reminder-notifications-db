@@ -32,8 +32,8 @@ git checkout -b add-reminder-notifications-db
 ```json
 {
   "id": "logseq-reminder-notifications-db",
-  "title": "Reminder Notifications (DB)",
-  "description": "Desktop and in-app notifications for scheduled blocks in Logseq Database version",
+  "title": "Reminder Notifications",
+  "description": "Desktop reminders for scheduled blocks in Logseq DB graphs",
   "author": "Joemnewton",
   "repo": "Joemnewton/logseq-reminder-notifications-db",
   "icon": "./icon.svg",
@@ -51,7 +51,7 @@ git checkout -b add-reminder-notifications-db
 ## Step 5: Commit Your Changes
 ```bash
 git add packages.json
-git commit -m "Add Reminder Notifications (DB) plugin
+git commit -m "Add Reminder Notifications plugin
 
 Desktop and in-app notifications for scheduled blocks in Logseq Database version.
 
@@ -69,7 +69,7 @@ git push origin add-reminder-notifications-db
 - Go to https://github.com/Joemnewton/marketplace
 - You should see a banner suggesting you create a Pull Request
 - Click "Compare & pull request"
-- **Title**: `Add Reminder Notifications (DB) plugin`
+- **Title**: `Add Reminder Notifications plugin`
 - **Description**:
 ```markdown
 # Reminder Notifications (DB Version)
@@ -99,7 +99,7 @@ Desktop and in-app notifications for scheduled blocks in Logseq Database version
 - ✅ In-app notifications working
 
 ## Screenshots
-See README: https://github.com/Joemnewton/logseq-reminder-notifications-db#demo
+See README: https://github.com/Joemnewton/logseq-reminder-notifications-db#screenshots
 ```
 
 - Click "Create pull request"

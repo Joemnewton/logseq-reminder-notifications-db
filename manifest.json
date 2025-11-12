@@ -1,7 +1,7 @@
 {
   "id": "logseq-reminder-notifications-db",
-  "title": "Reminder Notifications (Desktop DB Version ONLY)",
-  "description": "⚠️ DESKTOP DB VERSION ONLY - Desktop and in-app notifications for scheduled blocks. Does NOT work on mobile or file-based graphs.",
+  "title": "Reminder Notifications",
+  "description": "Desktop reminders for scheduled blocks (DB graphs only).",
   "author": "Joemnewton",
   "repo": "Joemnewton/logseq-reminder-notifications-db",
   "icon": "./icon.svg",
