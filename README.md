@@ -66,6 +66,30 @@ git clone https://github.com/Joemnewton/logseq-reminder-notifications-db.git
   - **Windows**: Settings → System → Notifications → Logseq
   - **Linux**: Depends on your desktop environment
 
+### 4. Test Notifications (Important for macOS)
+
+If Logseq isn't showing up in your macOS Notification settings, you need to trigger a notification first:
+
+**Create a test reminder:**
+1. In any Logseq page, create a block with a scheduled time 2 minutes from now:
+   ```markdown
+   - Test reminder
+     scheduled:: 2025-01-19 14:35
+   ```
+   (Replace with current date/time + 2 minutes)
+
+2. Run the rescan command: `/reminders: rescan`
+
+3. Wait for the notification to appear (it will trigger the macOS permission dialog)
+
+4. Click **Allow** when prompted
+
+5. Verify Logseq now appears in: **System Settings → Notifications → Logseq**
+
+6. Ensure notifications are enabled and set to "Alerts" (not "Banners") for persistent notifications
+
+**Note:** If you recently reinstalled Logseq, it won't appear in macOS Notifications until the first notification is triggered.
+
 ---
 
 ## 📝 Using Reminders
