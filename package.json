@@ -1,6 +1,6 @@
 {
   "name": "logseq-reminder-notifications-db",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Desktop + in-app reminders for scheduled blocks in Logseq Database (DB) graphs. Native notifications, multiple warning times, quiet hours.",
   "main": "index.js",
   "author": "Joemnewton",

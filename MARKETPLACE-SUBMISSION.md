@@ -78,7 +78,7 @@ Desktop and in-app notifications for scheduled blocks in Logseq Database version
 
 ## Plugin Information
 - **Repository**: https://github.com/Joemnewton/logseq-reminder-notifications-db
-- **Version**: 1.3.0
+- **Version**: 1.5.0
 - **License**: MIT
 - **Logseq Compatibility**: Database (DB) version only
 

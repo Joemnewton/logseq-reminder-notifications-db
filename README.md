@@ -176,7 +176,7 @@ This plugin is designed specifically for **Database (DB)** graphs. For file-base
 
 ### Technical Details
 
-- **Target Platform**: Logseq Desktop DB version (v1.3.x and later)
+- **Target Platform**: Logseq Desktop DB version
 - **Database Queries**: Uses `:block/title` and `:logseq.property/scheduled`
 - **Main Logic**: All code in `index.js` (single file, no bundler required)
 - **Dependencies**: Zero runtime dependencies (uses Logseq Plugin API only)

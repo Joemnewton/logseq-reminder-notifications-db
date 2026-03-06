@@ -18,6 +18,14 @@
  * - Added configurable notification duration settings
  * - Added enhanced debugging for macOS notification issues
  * - Added event listeners to track notification lifecycle
+ *
+ * v1.5.0 Changes:
+ * - Fixed global scope pollution (periodicRescanInterval → module variable)
+ * - Moved onSettingsChanged inside main() for proper initialization order
+ * - Added null/format checking on datascript query results
+ * - Added handling for entity reference scheduled property values
+ * - Removed unnecessary navigator.userAgent logging
+ * - Removed dead code cleanup references
  */
 
 /**
@@ -319,6 +327,7 @@ function isInQuietHours(now) {
 // Global state
 let upcomingReminders = [];
 let pollInterval = null;
+let periodicRescanInterval = null;
 let dailyRescanTimeout = null;
 let cleanupInterval = null;
 let alreadyNotified = {}; // Session-local tracking to prevent duplicates
@@ -327,12 +336,12 @@ let alreadyNotified = {}; // Session-local tracking to prevent duplicates
  * Main plugin initialization
  */
 function main() {
-  console.log('🔔 Reminder Notifications plugin v1.4.0 (DB Version) starting...');
+  console.log('🔔 Reminder Notifications plugin v1.5.0 (DB Version) starting...');
   console.log('⚠️  COMPATIBILITY: This plugin ONLY works with Logseq DESKTOP DB version');
   console.log('⚠️  NOT compatible with: Mobile apps, Web version, or File-based graphs');
   console.log('🔧 Debug: Settings available:', Object.keys(logseq.settings || {}));
   console.log('🔧 Debug: Using session-only notification tracking');
-  console.log('✨ v1.4.0: Increased notification durations and added configurable settings');
+  console.log('✨ v1.5.0: Code quality improvements and robustness fixes');
 
   // Define settings schema
   logseq.useSettingsSchema([
@@ -460,6 +469,43 @@ function main() {
   scheduleDailyRescan();
   setupBlockChangeListeners();
 
+  // Handle settings changes
+  logseq.onSettingsChanged((newSettings, oldSettings) => {
+    console.log('⚙️ Settings changed');
+
+    if (newSettings.pollIntervalSeconds !== oldSettings.pollIntervalSeconds) {
+      console.log('🔄 Restarting polling with new interval');
+      setupPolling();
+    }
+
+    if (newSettings.dailyRescanHour !== oldSettings.dailyRescanHour) {
+      console.log('🔄 Rescheduling daily rescan');
+      scheduleDailyRescan();
+    }
+
+    if (newSettings.defaultReminderIntervals !== oldSettings.defaultReminderIntervals) {
+      console.log('🔄 Reminder intervals changed, rescanning for reminders');
+      scanForUpcomingReminders();
+    }
+
+    if (newSettings.enableAllDayReminders !== oldSettings.enableAllDayReminders ||
+        newSettings.allDayReminderTime !== oldSettings.allDayReminderTime) {
+      console.log('🔄 All-day reminder settings changed, rescanning for reminders');
+      scanForUpcomingReminders();
+    }
+
+    if (newSettings.enableQuietHours !== oldSettings.enableQuietHours ||
+        newSettings.quietHoursStart !== oldSettings.quietHoursStart ||
+        newSettings.quietHoursEnd !== oldSettings.quietHoursEnd) {
+      console.log('🔄 Quiet hours settings changed');
+      if (newSettings.enableQuietHours) {
+        console.log(`   Quiet hours: ${newSettings.quietHoursStart}:00 to ${newSettings.quietHoursEnd}:00`);
+      } else {
+        console.log('   Quiet hours disabled');
+      }
+    }
+  });
+
   console.log('✅ Reminder Notifications plugin (DB Version) loaded');
 }
 
@@ -559,12 +605,18 @@ async function findBlocksWithScheduledContent() {
 
     const result = await logseq.DB.datascriptQuery(query);
 
-    return result.map(([uuid, title, pageName]) => ({
-      uuid: uuid,
-      content: title,
-      page: pageName,
-      type: 'content'
-    }));
+    if (!result || !Array.isArray(result)) {
+      return [];
+    }
+
+    return result
+      .filter(row => Array.isArray(row) && row.length >= 3)
+      .map(([uuid, title, pageName]) => ({
+        uuid: uuid,
+        content: title || '',
+        page: pageName || '',
+        type: 'content'
+      }));
   } catch (error) {
     console.error('❌ Error querying scheduled content blocks:', error);
     return [];
@@ -589,13 +641,19 @@ async function findBlocksWithScheduledProperty() {
 
     const result = await logseq.DB.datascriptQuery(query);
 
-    return result.map(([uuid, title, pageName, propValue]) => ({
-      uuid: uuid,
-      content: title,
-      page: pageName,
-      scheduledProperty: propValue,
-      type: 'property'
-    }));
+    if (!result || !Array.isArray(result)) {
+      return [];
+    }
+
+    return result
+      .filter(row => Array.isArray(row) && row.length >= 4)
+      .map(([uuid, title, pageName, propValue]) => ({
+        uuid: uuid,
+        content: title || '',
+        page: pageName || '',
+        scheduledProperty: propValue,
+        type: 'property'
+      }));
   } catch (error) {
     console.error('❌ Error querying scheduled property blocks:', error);
     return [];
@@ -639,6 +697,22 @@ function parseBlockForReminder(block) {
             allDayDate = checkForAllDaySchedule(block.scheduledProperty);
           }
         }
+      } else if (typeof block.scheduledProperty === 'object' && block.scheduledProperty !== null) {
+        // DB version may return entity references (objects with :db/id)
+        const val = block.scheduledProperty['journal-day'] || block.scheduledProperty[':block/journal-day'];
+        if (typeof val === 'number') {
+          const str = String(val);
+          if (str.length === 8) {
+            const year = parseInt(str.substring(0, 4));
+            const month = parseInt(str.substring(4, 6));
+            const day = parseInt(str.substring(6, 8));
+            const settings = logseq.settings || {};
+            if (settings.enableAllDayReminders) {
+              allDayDate = new Date(year, month - 1, day);
+            }
+          }
+        }
+        console.log(`📅 Scheduled property is an object (entity ref), extracted: ${allDayDate || 'nothing usable'}`);
       } else {
         console.warn(`⚠️ Unexpected scheduled property type: ${typeof block.scheduledProperty}`, block.scheduledProperty);
       }
@@ -685,8 +759,8 @@ function setupPolling() {
   if (pollInterval) {
     clearInterval(pollInterval);
   }
-  if (window.periodicRescanInterval) {
-    clearInterval(window.periodicRescanInterval);
+  if (periodicRescanInterval) {
+    clearInterval(periodicRescanInterval);
   }
   if (cleanupInterval) {
     clearInterval(cleanupInterval);
@@ -702,7 +776,7 @@ function setupPolling() {
   }, intervalSeconds * 1000);
 
   // Periodic rescan every 2 minutes to catch new scheduled blocks
-  window.periodicRescanInterval = setInterval(async () => {
+  periodicRescanInterval = setInterval(async () => {
     console.log('🔄 Periodic rescan (every 2 minutes)...');
     await scanForUpcomingReminders();
   }, PERIODIC_RESCAN_INTERVAL_MS);
@@ -821,7 +895,6 @@ async function sendNotification(reminder, intervalMinutes = 0, isOverdue = false
     console.log('🖥️ Checking desktop notification permission...');
     console.log('  - Notification API available:', typeof Notification !== 'undefined');
     console.log('  - Permission status:', typeof Notification !== 'undefined' ? Notification.permission : 'N/A');
-    console.log('  - User agent:', navigator.userAgent);
 
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       console.log('🖥️ Creating desktop notification with title:', title);
@@ -961,50 +1034,6 @@ function cleanupOldNotificationRecords() {
 }
 
 /**
- * Handle settings changes
- */
-logseq.onSettingsChanged((newSettings, oldSettings) => {
-  console.log('⚙️ Settings changed');
-
-  // Restart polling if interval changed
-  if (newSettings.pollIntervalSeconds !== oldSettings.pollIntervalSeconds) {
-    console.log('🔄 Restarting polling with new interval');
-    setupPolling();
-  }
-
-  // Reschedule daily rescan if hour changed
-  if (newSettings.dailyRescanHour !== oldSettings.dailyRescanHour) {
-    console.log('🔄 Rescheduling daily rescan');
-    scheduleDailyRescan();
-  }
-
-  // Rescan if reminder intervals changed
-  if (newSettings.defaultReminderIntervals !== oldSettings.defaultReminderIntervals) {
-    console.log('🔄 Reminder intervals changed, rescanning for reminders');
-    scanForUpcomingReminders();
-  }
-
-  // Rescan if all-day reminder settings changed
-  if (newSettings.enableAllDayReminders !== oldSettings.enableAllDayReminders ||
-      newSettings.allDayReminderTime !== oldSettings.allDayReminderTime) {
-    console.log('🔄 All-day reminder settings changed, rescanning for reminders');
-    scanForUpcomingReminders();
-  }
-
-  // Log quiet hours changes (no action needed, applied on next notification check)
-  if (newSettings.enableQuietHours !== oldSettings.enableQuietHours ||
-      newSettings.quietHoursStart !== oldSettings.quietHoursStart ||
-      newSettings.quietHoursEnd !== oldSettings.quietHoursEnd) {
-    console.log('🔄 Quiet hours settings changed');
-    if (newSettings.enableQuietHours) {
-      console.log(`   Quiet hours: ${newSettings.quietHoursStart}:00 to ${newSettings.quietHoursEnd}:00`);
-    } else {
-      console.log('   Quiet hours disabled');
-    }
-  }
-});
-
-/**
  * Setup listeners for block changes to auto-detect new scheduled blocks
  */
 function setupBlockChangeListeners() {
@@ -1026,8 +1055,8 @@ logseq.beforeunload(() => {
     clearInterval(pollInterval);
   }
 
-  if (window.periodicRescanInterval) {
-    clearInterval(window.periodicRescanInterval);
+  if (periodicRescanInterval) {
+    clearInterval(periodicRescanInterval);
   }
 
   if (cleanupInterval) {
@@ -1036,15 +1065,6 @@ logseq.beforeunload(() => {
 
   if (dailyRescanTimeout) {
     clearTimeout(dailyRescanTimeout);
-  }
-
-  // Clear any pending rescans
-  if (window.scheduleRescanTimeout) {
-    clearTimeout(window.scheduleRescanTimeout);
-  }
-
-  if (window.pageChangeRescanTimeout) {
-    clearTimeout(window.pageChangeRescanTimeout);
   }
 });
 

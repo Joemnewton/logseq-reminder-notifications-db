@@ -1,5 +1,27 @@
 # Changelog - DB Version
 
+## v1.5.0 (Database Version) - 2026-03-06
+
+### Code Quality & Robustness
+
+- **Fixed global scope pollution**: Replaced `window.periodicRescanInterval` with a module-level variable, consistent with other timer references
+- **Moved `onSettingsChanged` inside `main()`**: Ensures settings listener is registered after plugin initialization, preventing potential race conditions
+- **Added query result validation**: `datascriptQuery` results are now checked for null/unexpected formats before processing, preventing crashes from malformed data
+- **Added entity reference handling**: Scheduled property values that are entity references (objects with `:db/id`, e.g. journal page refs) are now handled gracefully instead of being silently ignored
+- **Removed `navigator.userAgent` logging**: Eliminated unnecessary privacy-sensitive debug output
+- **Removed dead code**: Cleaned up references to `window.scheduleRescanTimeout` and `window.pageChangeRescanTimeout` that were never set
+
+## v1.4.0 (Database Version) - 2025-11-05
+
+### Notification Duration Improvements
+
+- Increased default in-app notification duration from 8s to 30s
+- Increased default desktop notification duration from 10s to 30s
+- Increased default overdue notification duration from 30s to 60s
+- Added configurable notification duration settings (in-app, desktop, overdue)
+- Added enhanced debugging for macOS notification issues
+- Added event listeners to track notification lifecycle (onshow, onclick, onclose, onerror)
+
 ## v1.3.0 (Database Version) - 2025-10-18
 
 ### Initial DB Version Release
