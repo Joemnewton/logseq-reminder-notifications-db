@@ -203,9 +203,9 @@ MIT © [Joemnewton](https://github.com/Joemnewton)
 
 ## Support
 
-If this plugin saves you time, consider buying me a coffee:
+If this plugin saves you time, consider supporting development:
 
-<a href="https://www.buymeacoffee.com/joenewton" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+<a href="https://paypal.me/josephmnewton" target="_blank"><img src="https://img.shields.io/badge/PayPal-Donate-blue?style=for-the-badge&logo=paypal" alt="Donate via PayPal" ></a>
 
 ---
 
