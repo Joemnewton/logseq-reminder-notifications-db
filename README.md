@@ -201,6 +201,14 @@ MIT © [Joemnewton](https://github.com/Joemnewton)
 
 ---
 
+## Support
+
+If this plugin saves you time, consider buying me a coffee:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/joenewton)
+
+---
+
 ## 🔗 Links
 
 - **GitHub Repository**: [logseq-reminder-notifications-db](https://github.com/Joemnewton/logseq-reminder-notifications-db)
